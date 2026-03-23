@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GitInsight</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rethink+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+  <style>
+    :root[data-theme="light"] {
+      --bg-start: #c9d6ff;
+      --bg-mid: #dce8ff;
+      --bg-end: #f0f4ff;
+      --card: rgba(255,255,255,0.55);
+      --card-solid: rgba(255,255,255,0.85);
+      --border: rgba(255,255,255,0.8);
+      --text: #0d1b5e;
+      --muted: rgba(13,27,94,0.5);
+      --accent: #0d1b5e;
+      --bar-fill: #0d1b5e;
+      --bar-bg: rgba(13,27,94,0.1);
+      --star: #e8a020;
+      --tag-bg: rgba(13,27,94,0.08);
+      --tag-text: #0d1b5e;
+      --shadow: 0 8px 32px rgba(13,27,94,0.12);
+      --toggle-bg: rgba(13,27,94,0.12);
+      --error: #c0392b;
+    }
+    :root[data-theme="dark"] {
+      --bg-start: #0d1b5e;
+      --bg-mid: #1a2a7a;
+      --bg-end: #0a1040;
+      --card: rgba(255,255,255,0.06);
+      --card-solid: rgba(255,255,255,0.1);
+      --border: rgba(255,255,255,0.12);
+      --text: #e8edff;
+      --muted: rgba(232,237,255,0.5);
+      --accent: #7b9cff;
+      --bar-fill: #7b9cff;
+      --bar-bg: rgba(123,156,255,0.15);
+      --star: #f0c040;
+      --tag-bg: rgba(123,156,255,0.15);
+      --tag-text: #7b9cff;
+      --shadow: 0 8px 32px rgba(0,0,0,0.3);
+      --toggle-bg: rgba(255,255,255,0.1);
+      --error: #ff6b6b;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Rethink Sans', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--bg-start) 0%, var(--bg-mid) 50%, var(--bg-end) 100%);
+      color: var(--text);
+      padding: 32px 20px 60px;
+      transition: background 0.5s, color 0.3s;
+    }
+
+    /* ---- HERO ---- */
+    .hero {
+      text-align: center;
+      padding: 48px 0 40px;
+      animation: fadeDown 0.7s ease both;
+    }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-title {
+      font-family: 'Rethink Sans', serif;
+      font-size: clamp(64px, 12vw, 110px);
+      font-weight: 900;
+      color: var(--text);
+      letter-spacing: -3px;
+      line-height: 1;
+      margin-bottom: 14px;
+    }
+
+    .hero-subtitle {
+      font-size: 15px;
+      font-weight: 300;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+    }
+
+    /* ---- SEARCH ---- */
+    .search-wrap {
+      max-width: 560px;
+      margin: 36px auto 0;
+      animation: fadeUp 0.7s 0.2s ease both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .search-label {
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+
+    .search-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    input {
+      flex: 1;
+      padding: 18px 24px;
+      background: var(--card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      color: var(--text);
+      font-family: 'Rethink Sans', sans-serif;
+      font-size: 15px;
+      font-weight: 400;
+      outline: none;
+      box-shadow: var(--shadow);
+      transition: border 0.2s, box-shadow 0.2s;
+    }
+
+    input::placeholder { color: var(--muted); }
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 8px 32px rgba(13,27,94,0.18);
+    }
+
+    .analyze-btn {
+      padding: 18px 32px;
+      background: var(--card-solid);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      color: var(--text);
+      font-family: 'Rethink Sans', serif;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s, box-shadow 0.2s;
+      white-space: nowrap;
+    }
+
+    .analyze-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(13,27,94,0.2);
+    }
+
+    .analyze-btn:active { transform: translateY(0); }
+
+    .error-msg {
+      color: var(--error);
+      font-size: 13px;
+      margin-top: 10px;
+      text-align: center;
+      min-height: 18px;
+    }
+
+    /* ---- TOGGLE ---- */
+    .toggle-wrap {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      margin-top: 28px;
+      font-size: 13px;
+      color: var(--muted);
+      animation: fadeUp 0.7s 0.35s ease both;
+    }
+
+    .toggle-track {
+      width: 44px;
+      height: 24px;
+      background: var(--toggle-bg);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .toggle-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--text);
+      transition: transform 0.3s;
+    }
+
+    [data-theme="dark"] .toggle-thumb { transform: translateX(20px); }
+
+    /* ---- LOADER ---- */
+    .loader {
+      text-align: center;
+      padding: 60px 0;
+      color: var(--muted);
+      font-size: 14px;
+      display: none;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .spinner {
+      width: 32px; height: 32px;
+      border: 2px solid var(--bar-bg);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 12px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ---- RESULTS ---- */
+    #results {
+      max-width: 700px;
+      margin: 40px auto 0;
+      display: none;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .glass-card {
+      background: var(--card);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      padding: 28px;
+      margin-bottom: 16px;
+    }
+
+    /* Profile */
+    .profile-row {
+      display: flex;
+      gap: 20px;
+      align-items: center;
+    }
+
+    .avatar {
+      width: 80px; height: 80px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      flex-shrink: 0;
+      box-shadow: var(--shadow);
+    }
+
+    .profile-right h2 {
+      font-family: 'Rethink Sans', serif;
+      font-size: 22px;
+      font-weight: 700;
+    }
+
+    .handle {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .bio {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 10px;
+      line-height: 1.5;
+    }
+
+    .meta-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .pill {
+      background: var(--tag-bg);
+      color: var(--tag-text);
+      border-radius: 99px;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    /* Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-card {
+      background: var(--card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 22px 16px;
+      text-align: center;
+      box-shadow: var(--shadow);
+    }
+
+    .stat-value {
+      font-family: 'Rethink Sans', serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 4px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    /* Section title */
+    .section-title {
+      font-family: 'Rethink Sans', serif;
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 18px;
+      color: var(--text);
+    }
+
+    /* Language bars */
+    .lang-row { margin-bottom: 14px; }
+
+    .lang-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-bottom: 6px;
+      color: var(--muted);
+    }
+
+    .lang-meta span:first-child { color: var(--text); font-weight: 500; }
+
+    .bar-track {
+      height: 6px;
+      background: var(--bar-bg);
+      border-radius: 99px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: var(--bar-fill);
+      border-radius: 99px;
+      transition: width 1s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* Repo cards */
+    .repo-item {
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .repo-item:last-child { border-bottom: none; }
+
+    .repo-name {
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .repo-name:hover { text-decoration: underline; }
+    .repo-desc { font-size: 12px; color: var(--muted); margin: 4px 0 10px; line-height: 1.5; }
+
+    .repo-meta {
+      display: flex;
+      gap: 12px;
+      font-size: 12px;
+      color: var(--muted);
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .repo-tag {
+      background: var(--tag-bg);
+      color: var(--tag-text);
+      padding: 2px 10px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 500;
+    }
+
+    .github-link {
+      display: block;
+      text-align: center;
+      margin-top: 20px;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+
+    .github-link:hover { opacity: 1; }
+
+    @media (max-width: 500px) {
+      .profile-row { flex-direction: column; text-align: center; }
+      .meta-pills { justify-content: center; }
+      .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+      .stat-value { font-size: 22px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HERO -->
+  <div class="hero">
+    <h1 class="hero-title">GitInsight</h1>
+    <p class="hero-subtitle">GitHub profile analyzer — enter any username to see their insights</p>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="search-wrap">
+    <p class="search-label">Enter the GitHub username below</p>
+    <div class="search-row">
+      <input type="text" id="username-input" placeholder="e.g. torvalds" autocomplete="off"/>
+      <button class="analyze-btn" onclick="analyze()">Analyze</button>
+    </div>
+    <p class="error-msg" id="error-msg"></p>
+  </div>
+
+  <!-- THEME TOGGLE -->
+  <div class="toggle-wrap">
+    <span id="theme-label">Light</span>
+    <div class="toggle-track" onclick="toggleTheme()">
+      <div class="toggle-thumb"></div>
+    </div>
+    <span>Dark</span>
+  </div>
+
+  <!-- LOADER -->
+  <div class="loader" id="loader">
+    <div class="spinner"></div>
+    Fetching GitHub data...
+  </div>
+
+  <!-- RESULTS -->
+  <div id="results">
+
+    <div class="glass-card">
+      <div class="profile-row">
+        <img class="avatar" id="avatar" src="" alt="avatar"/>
+        <div class="profile-right">
+          <h2 id="name"></h2>
+          <p class="handle" id="handle"></p>
+          <p class="bio" id="bio"></p>
+          <div class="meta-pills">
+            <span class="pill" id="followers-pill"></span>
+            <span class="pill" id="following-pill"></span>
+            <span class="pill" id="location-pill" style="display:none"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="total-repos">—</div>
+        <div class="stat-label">Repos</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="total-stars">—</div>
+        <div class="stat-label">Stars</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="total-forks">—</div>
+        <div class="stat-label">Forks</div>
+      </div>
+    </div>
+
+    <div class="glass-card">
+      <div class="section-title">Most Used Languages</div>
+      <div id="languages"></div>
+    </div>
+
+    <div class="glass-card">
+      <div class="section-title">Top Repositories</div>
+      <div id="top-repos"></div>
+      <a class="github-link" id="github-link" href="" target="_blank">View full profile on GitHub →</a>
+    </div>
+
+  </div>
+
+  <script>
+    function toggleTheme() {
+      const html = document.documentElement;
+      const isDark = html.getAttribute("data-theme") === "dark";
+      html.setAttribute("data-theme", isDark ? "light" : "dark");
+    }
+
+    document.getElementById("username-input").addEventListener("keydown", e => {
+      if (e.key === "Enter") analyze();
+    });
+
+    async function analyze() {
+      const username = document.getElementById("username-input").value.trim();
+      const errorMsg = document.getElementById("error-msg");
+      const results  = document.getElementById("results");
+      const loader   = document.getElementById("loader");
+
+      errorMsg.textContent = "";
+      results.style.display = "none";
+      loader.style.display = "block";
+
+      const formData = new FormData();
+      formData.append("username", username);
+
+      try {
+        const response = await fetch("/analyze", { method: "POST", body: formData });
+        const data = await response.json();
+        loader.style.display = "none";
+
+        if (data.error) { errorMsg.textContent = data.error; return; }
+
+        document.getElementById("avatar").src        = data.avatar;
+        document.getElementById("name").textContent  = data.name;
+        document.getElementById("handle").textContent = "@" + data.username;
+        document.getElementById("bio").textContent   = data.bio;
+        document.getElementById("followers-pill").textContent  = `${data.followers} followers`;
+        document.getElementById("following-pill").textContent  = `${data.following} following`;
+        document.getElementById("total-repos").textContent     = data.public_repos;
+        document.getElementById("total-stars").textContent     = data.total_stars;
+        document.getElementById("total-forks").textContent     = data.total_forks;
+        document.getElementById("github-link").href            = data.github_url;
+
+        const locPill = document.getElementById("location-pill");
+        if (data.location) {
+          locPill.textContent = "📍 " + data.location;
+          locPill.style.display = "inline";
+        } else {
+          locPill.textContent = "";
+          locPill.style.display = "none";
+        }
+
+        // Languages
+        const langDiv = document.getElementById("languages");
+        langDiv.innerHTML = "";
+        const maxCount = Math.max(...Object.values(data.languages));
+        Object.entries(data.languages).slice(0, 6).forEach(([lang, count]) => {
+          const pct = Math.round((count / maxCount) * 100);
+          langDiv.innerHTML += `
+            <div class="lang-row">
+              <div class="lang-meta">
+                <span>${lang}</span>
+                <span>${count} repo${count > 1 ? "s" : ""}</span>
+              </div>
+              <div class="bar-track">
+                <div class="bar-fill" style="width:0%" data-pct="${pct}"></div>
+              </div>
+            </div>`;
+        });
+
+        // Animate bars after render
+        setTimeout(() => {
+          document.querySelectorAll(".bar-fill").forEach(bar => {
+            bar.style.width = bar.dataset.pct + "%";
+          });
+        }, 50);
+
+        // Repos
+        const reposDiv = document.getElementById("top-repos");
+        reposDiv.innerHTML = "";
+        data.top_repos.forEach(repo => {
+          reposDiv.innerHTML += `
+            <div class="repo-item">
+              <a class="repo-name" href="${repo.url}" target="_blank">${repo.name}</a>
+              <p class="repo-desc">${repo.description}</p>
+              <div class="repo-meta">
+                <span class="repo-tag">${repo.language}</span>
+                <span>⭐ ${repo.stars}</span>
+                <span>🍴 ${repo.forks}</span>
+              </div>
+            </div>`;
+        });
+
+        results.style.display = "block";
+
+      } catch(e) {
+        loader.style.display = "none";
+        errorMsg.textContent = "Something went wrong. Is the Flask server running?";
+      }
+    }
+  </script>
+</body>
+</html>
